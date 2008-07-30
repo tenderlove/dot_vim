@@ -1,6 +1,5 @@
 " autoload/rails.vim
 " Author:       Tim Pope <vimNOSPAM@tpope.info>
-" $Id: rails.vim 256 2008-02-18 02:43:12Z tpope $
 
 " Install this file as autoload/rails.vim.  This file is sourced manually by
 " plugin/rails.vim.  It is in autoload directory to allow for future usage of
@@ -11,20 +10,13 @@
 " Exit quickly when:
 " - this plugin was already loaded (or disabled)
 " - when 'compatible' is set
-if &cp || (exists("g:autoloaded_rails") && g:autoloaded_rails) && !(exists("g:rails_debug") && g:rails_debug)
+if &cp || exists("g:autoloaded_rails")
   finish
 endif
-let g:autoloaded_rails = 1
+let g:autoloaded_rails = '2.0'
 
 let s:cpo_save = &cpo
 set cpo&vim
-
-" Apparently, the nesting level within Vim when the Ruby interface is
-" initialized determines how much stack space Ruby gets.  In previous
-" versions of rails.vim, sporadic stack overflows occured when omnicomplete
-" was used.  This was apparently due to rails.vim having first initialized
-" ruby deep in a nested function call.
-silent! ruby nil
 
 " Utility Functions {{{1
 
@@ -172,7 +164,7 @@ function! s:rubyeval(ruby,...)
   endif
 endfunction
 
-function! s:railseval(ruby)
+function! s:railseval(ruby,...)
   if a:0 > 0
     let def = a:1
   else
@@ -302,7 +294,7 @@ function! s:format(...)
   return format
 endfunction
 
-let s:view_types = 'rhtml,erb,rxml,builder,rjs,mab,liquid,haml,dryml'
+let s:view_types = 'rhtml,erb,rxml,builder,rjs,mab,liquid,haml,dryml,mn'
 
 function! s:viewspattern()
   return '\%('.s:gsub(s:view_types,',','\\|').'\)'
@@ -464,10 +456,10 @@ endfunction
 " }}}1
 " "Public" Interface {{{1
 
-" RailsRevision() and RailsRoot() the only official public functions
+" RailsRoot() is the only official public function
 
 function! RailsRevision()
-  return s:revision
+  return 1000*matchstr(g:autoloaded_rails,'^\d\+')+matchstr(g:autoloaded_rails,'[1-9]\d*$')
 endfunction
 
 function! RailsRoot()
@@ -726,7 +718,7 @@ endfunction
 function! RailsNewApp(bang,...)
   if a:0 == 0
     if a:bang
-      echo "rails.vim revision ".s:revision
+      echo "rails.vim version ".g:autoloaded_rails
     else
       !rails
     endif
@@ -903,8 +895,7 @@ endfunction
 function! s:Rake(bang,arg)
   let oldefm = &efm
   if a:bang
-    let &efm = s:efm_backtrace
-    "errorformat=%*[^"]"%f"%*\D%l: %m,"%f"%*\D%l: %m,%-G%f:%l: (Each undeclared identifier is reported only once,%-G%f:%l: for each function it appears in.),%f:%l:%c:%m,%f(%l):%m,%f:%l:%m,"%f"\, line %l%*\D%c%*[^ ] %m,%D%*\a[%*\d]: Entering directory `%f',%X%*\a[%*\d]: Leaving directory `%f',%D%*\a: Entering directory `%
+    let &l:errorformat = s:efm_backtrace
   endif
   let t = RailsFileType()
   let arg = a:arg
@@ -1007,7 +998,7 @@ function! s:Rake(bang,arg)
     make
   endif
   if oldefm != ''
-    let &efm = oldefm
+    let &l:errorformat = oldefm
   endif
 endfunction
 
@@ -1917,7 +1908,15 @@ function! s:fixturesList(A,L,P)
 endfunction
 
 function! s:migrationList(A,L,P)
-  return s:autocamelize(s:relglob("db/migrate/???_",a:A."*",".rb"),a:A)
+  if a:A =~ '^\d'
+    let migrations = s:relglob("db/migrate/",a:A."[0-9_]*",".rb")
+    let migrations = s:gsub(migrations,'_.{-}($|\n)','\1')
+    return migrations
+  else
+    let migrations = s:relglob("db/migrate/","[0-9]*[0-9]_".a:A."*",".rb")
+    let migrations = s:gsub(migrations,'(^|\n)\d+_','\1')
+    return s:autocamelize(migrations,a:A)
+  endif
 endfunction
 
 function! s:apiList(A,L,P)
@@ -2789,6 +2788,8 @@ function! s:Extract(bang,...) range abort
     let renderstr = "page << ".s:sub(renderstr,"render ","render(").")"
   elseif ext == "haml"
     let renderstr = "= ".renderstr
+  elseif ext == "mn"
+    let renderstr = "_".renderstr
   endif
   let buf = @@
   silent exe range."yank"
@@ -3041,7 +3042,7 @@ function! s:helpermethods()
         \."hidden_field hidden_field_tag highlight "
         \."image_path image_submit_tag image_tag input "
         \."javascript_cdata_section javascript_include_tag javascript_path javascript_tag "
-        \."label link_to link_to_function link_to_if link_to_remote link_to_unless link_to_unless_current "
+        \."label label_tag link_to link_to_function link_to_if link_to_remote link_to_unless link_to_unless_current "
         \."mail_to markdown "
         \."number_to_currency number_to_human_size number_to_percentage number_to_phone number_with_delimiter number_with_precision "
         \."observe_field observe_form option_groups_from_collection_for_select options_for_select options_from_collection_for_select "
@@ -3207,18 +3208,17 @@ function! s:BufSyntax()
       syn cluster htmlArgCluster add=@rubyStringSpecial
       syn cluster htmlPreProc    add=@rubyStringSpecial
 
-    elseif &syntax == "eruby" || &syntax == "haml" " && t =~ '^view\>'
+    elseif &syntax == "eruby" || &syntax == "haml"
       syn case match
       if classes != ''
         exe "syn keyword erubyRailsUserClass ".classes." contained containedin=@erubyRailsRegions"
       endif
       if &syntax == "haml"
-        syn cluster erubyRailsRegions contains=hamlRubyCodeIncluded,hamlRubyCode,hamlRubyHash,rubyInterpolation
+        syn cluster erubyRailsRegions contains=hamlRubyCodeIncluded,hamlRubyCode,hamlRubyHash,@hamlEmbeddedRuby,rubyInterpolation
       else
         syn cluster erubyRailsRegions contains=erubyOneLiner,erubyBlock,erubyExpression,rubyInterpolation
       endif
-      syn match rubyRailsError '[@:]\@<!@\%(params\|request\|response\|session\|headers\|cookies\|flash\)\>' contained containedin=@erubyRailsRegions,@rubyTop
-      "exe "syn match erubyRailsHelperMethod ".rails_helper_methods." contained containedin=@erubyRailsRegions"
+      syn match rubyRailsError '[@:]\@<!@\%(params\|request\|response\|session\|headers\|cookies\|flash\)\>' contained containedin=@erubyRailsRegions
       exe "syn keyword erubyRailsHelperMethod ".s:sub(s:helpermethods(),'<select\s+','')." contained containedin=@erubyRailsRegions"
       syn match erubyRailsHelperMethod '\<select\>\%(\s*{\|\s*do\>\|\s*(\=\s*&\)\@!' contained containedin=@erubyRailsRegions
       syn keyword erubyRailsMethod debugger logger contained containedin=@erubyRailsRegions
@@ -3595,14 +3595,13 @@ function! s:NewProjectTemplate(proj,rr,fancy)
   if isdirectory(a:rr.'/test/integration')
     let str = str . "  integration=integration filter=\"**\" {\n  }\n"
   endif
-  let str = str . "  mocks=mocks filter=\"**\" {\n  }\n"
+  if isdirectory(a:rr.'/test/mocks')
+    let str = str . "  mocks=mocks filter=\"**\" {\n  }\n"
+  endif
   if isdirectory(a:rr.'/test/unit')
     let str = str . "  unit=unit filter=\"**\" {\n  }\n"
   endif
   let str = str . " }\n}\n"
-  "if exists("*RailsProcessProject")
-    "let str = call RailsProcessProject(a:rr,str)
-  "endif
   return str
 endfunction
 
@@ -3640,7 +3639,7 @@ function! s:BufDatabase(...)
       endif
       if out == ""
         let cmdb = 'require %{yaml}; File.open(%q{'.RailsRoot().'/config/database.yml}) {|f| y = YAML::load(f); e = y[%{'
-        let cmde = '}]; i=0; e=y[e] while e.respond_to?(:to_str) && (i+=1)<16; e.each{|k,v|puts k+%{=}+v if v}}'
+        let cmde = '}]; i=0; e=y[e] while e.respond_to?(:to_str) && (i+=1)<16; e.each{|k,v|puts k.to_s+%{=}+v.to_s}}'
         if a:0 ? a:1 : g:rails_expensive
           let out = s:rubyeval(cmdb.env.cmde,'')
         else
@@ -3917,7 +3916,7 @@ function! s:Abbrev(bang,...) abort
     return s:error("Rabbrev: invalid arguments")
   endif
   let rhs = a:2
-  silent! call s:unabbrev(lhs)
+  call s:unabbrev(lhs,1)
   if lhs =~ '($'
     let b:rails_abbreviations = b:rails_abbreviations . lhs . "\t" . rhs . "" . (a:0 > 2 ? "\t".a:3 : ""). "\n"
     let llhs = s:sub(lhs,'\($','')
@@ -3945,14 +3944,16 @@ function! s:Abbrev(bang,...) abort
   let b:rails_abbreviations = b:rails_abbreviations . lhs . "\t" . rhs . "\n"
 endfunction
 
-function! s:unabbrev(abbr)
+function! s:unabbrev(abbr,...)
   let abbr = s:sub(a:abbr,'%(::|\(|\[)$','')
   let pat  = s:sub(abbr,'\\','\\\\')
   if !exists("b:rails_abbreviations")
     let b:rails_abbreviations = "\n"
   endif
   let b:rails_abbreviations = substitute(b:rails_abbreviations,'\V\C\n'.pat.'\(\t\|::\t\|(\t\|[\t\)\.\{-\}\n','\n','')
-  exe "iunabbrev <buffer> ".abbr
+  if a:0 == 0 || a:1 == 0
+    exe "iunabbrev <buffer> ".abbr
+  endif
 endfunction
 
 " }}}1
@@ -4264,7 +4265,7 @@ function! s:BufSettings()
   endif
   call s:SetBasePath()
   let rp = s:gsub(RailsRoot(),'[ ,]','\\&')
-  let &errorformat=s:efm
+  let &l:errorformat = s:efm
   setlocal makeprg=rake
   if stridx(&tags,rp) == -1
     let &l:tags = &tags . "," . rp . "/tags," . rp . "/.tags"
@@ -4369,8 +4370,6 @@ map <SID>xx <SID>xx
 let s:sid = s:sub(maparg("<SID>xx"),'xx$','')
 unmap <SID>xx
 let s:file = expand('<sfile>:p')
-let s:revision = ' $Id: rails.vim 256 2008-02-18 02:43:12Z tpope $ '
-let s:revision = s:sub(s:revision,'^ [$]Id:.{-}(<[0-9a-f]+>).*[$] $','\1')
 
 " }}}1
 
