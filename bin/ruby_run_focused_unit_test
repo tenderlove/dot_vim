@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+
+filename = ARGV[0]
+line_number = ARGV[1].to_i
+lines = File.read(filename).split(/\n/)
+(line_number - 1).downto(0) do |i|
+  if lines[i] =~ /\s*def (test\S*)/
+    cmd = %{ruby -I lib:test "#{filename}" -n "#{$1}"}
+    puts cmd
+    system cmd
+    exit
+  end
+end
