@@ -35,6 +35,6 @@ augroup RubyTests
   autocmd BufRead,BufNewFile *_test.rb,test_*.rb
     \ :nmap rt V:<C-U>!$HOME/.vim/bin/ruby_run_focused_unit_test 
     \ % <C-R>=line("'<")<CR>p <CR>|
-    \ :nmap rT :<C-U>!ruby %<CR>
+    \ :nmap rT :<C-U>!ruby -I lib:test %<CR>
 augroup END
 
