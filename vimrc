@@ -1,3 +1,28 @@
+set nocompatible
+set backspace=indent,eol,start
+set autoindent		" always set autoindenting on
+set history=50		" keep 50 lines of command line history
+set ruler		" show the cursor position all the time
+set showcmd		" display incomplete commands
+set incsearch		" do incremental searching
+map Q gq
+vnoremap p <Esc>:let current_reg = @"<CR>gvs<C-R>=current_reg<CR><Esc>
+
+" Switch syntax highlighting on, when the terminal has colors
+" Also switch on highlighting the last used search pattern.
+if &t_Co > 2 || has("gui_running")
+  syntax on
+  set hlsearch
+endif
+
+if has("gui_running")
+  set lines=60
+  set guioptions-=m
+  set guioptions-=T
+endif
+
+au BufNewFile,BufRead *.ltx                      set wm=4
+
 set backupdir=/tmp
 
 set path+=lib/**
