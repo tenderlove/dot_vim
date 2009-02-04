@@ -63,3 +63,5 @@ augroup RubyTests
     \ :nmap rT :<C-U>!ruby -I lib:ext:test %<CR>
 augroup END
 
+map <Leader>rt :!ctags --extra=+f -R *<CR><CR>
+set scrolloff=2
