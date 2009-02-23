@@ -91,8 +91,14 @@ augroup RubyTests
   autocmd BufRead,BufNewFile *_test.rb,test_*.rb
     \ :nmap rt V:<C-U>!$HOME/.vim/bin/ruby_run_focused_unit_test 
     \ % <C-R>=line("'<")<CR>p <CR>|
-    \ :nmap rT :<C-U>!ruby -I lib:ext:test %<CR>
+    \ :nmap rT :<C-U>!rake TEST=%<CR>
 augroup END
 
 map <Leader>rt :!ctags --extra=+f -R *<CR><CR>
 set scrolloff=2
+"set foldmethod=syntax
+"let ruby_no_comment_fold=1
+"let c_no_comment_fold=1
+set ruler
+set laststatus=2
+set statusline=%t%(\ [%n%M]%)%(\ %H%R%W%)\ %(%c-%v,\ %l\ of\ %L,\ (%o)\ %P\ 0x%B\ (%b)%)
