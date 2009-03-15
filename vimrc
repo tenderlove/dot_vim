@@ -31,6 +31,7 @@ if has("autocmd")
     \ if line("'\"") > 0 && line("'\"") <= line("$") |
     \   exe "normal g`\"" |
     \ endif
+  autocmd BufRead *.rdoc setlocal filetype=text
 
   augroup END
 
@@ -102,3 +103,5 @@ set scrolloff=2
 set ruler
 set laststatus=2
 set statusline=%t%(\ [%n%M]%)%(\ %H%R%W%)\ %(%c-%v,\ %l\ of\ %L,\ (%o)\ %P\ 0x%B\ (%b)%)
+set lines=40
+set columns=80
