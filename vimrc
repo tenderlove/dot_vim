@@ -48,7 +48,6 @@ if &t_Co > 2 || has("gui_running")
 endif
 
 if has("gui_running")
-  set lines=60
   set guioptions-=m
   set guioptions-=T
 endif
@@ -105,3 +104,10 @@ set laststatus=2
 set statusline=%t%(\ [%n%M]%)%(\ %H%R%W%)\ %(%c-%v,\ %l\ of\ %L,\ (%o)\ %P\ 0x%B\ (%b)%)
 set lines=40
 set columns=80
+
+"match ExtraWhitespace /\s\+$/
+"match ExtraTabs /\t\+/
+"
+"highlight ExtraWhitespace ctermbg=darkgreen guibg=lightgreen
+"highlight ExtraTabs ctermbg=red guibg=red
+let ruby_space_errors = 1
