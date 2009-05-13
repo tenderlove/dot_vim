@@ -137,3 +137,5 @@ function! AlignLine(line, sep, maxpos, extra)
   let spaces = repeat(' ', a:maxpos - strlen(m[1]) + a:extra)
   return m[1] . spaces . m[2]
 endfunction
+
+setlocal spell spelllang=en_us
