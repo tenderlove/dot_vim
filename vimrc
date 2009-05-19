@@ -139,3 +139,4 @@ function! AlignLine(line, sep, maxpos, extra)
 endfunction
 
 setlocal spell spelllang=en_us
+compiler rubyunit

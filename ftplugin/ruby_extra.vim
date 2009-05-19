@@ -1,4 +1,3 @@
-compiler ruby
 let ruby_space_errors = 1
 
 " Run Ruby unit tests with gT (for all) or gt (only test under
