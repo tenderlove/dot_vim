@@ -23,4 +23,4 @@ if !exists( "*EndToken" )
 endif
 
 imap <S-CR> <ESC>:execute 'normal o' . EndToken()<CR>O
-nmap <Leader>fd :cf /tmp/autotest.txt<cr> :compiler rubyunit<cr>
+nmap <Leader>ee :cf /tmp/autotest.txt<cr> :compiler rubyunit<cr>
