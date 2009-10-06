@@ -142,12 +142,10 @@ setlocal spell spelllang=en_us
 compiler rubyunit
 
 function! MoveToProjectRoot()
-  let l:dirs = [findfile('Rakefile', ",;"), finddir('lib', ",;"), finddir('test', ",;") ] 
-  if dirs != ['Rakefile', 'lib', 'test'] && dirs != ['', '', '']
+  let l:dirs = [finddir('.git', ",;")] 
+  if dirs != ['.git'] && dirs != ['']
     call map(dirs, '"/" . join(remove(split(v:val, "/"), 0, -2), "/")')
-    if dirs[0] == dirs[1] && dirs[0] == dirs[2]
-      execute 'cd ' . dirs[0]
-    endif
+    execute 'cd ' . dirs[0]
   endif
 endfunction
-call MoveToProjectRoot()
+"call MoveToProjectRoot()
