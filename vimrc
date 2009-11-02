@@ -149,3 +149,7 @@ function! MoveToProjectRoot()
   endif
 endfunction
 "call MoveToProjectRoot()
+
+" Changelog configuration
+let g:changelog_username='Aaron Patterson <tenderlove@ruby-lang.org>'
+let g:changelog_dateformat='%c'
