@@ -32,6 +32,8 @@ if has("autocmd")
     \   exe "normal g`\"" |
     \ endif
   autocmd BufRead *.rdoc setlocal filetype=text
+  autocmd BufRead *.markdown setlocal filetype=mkd
+  autocmd BufRead ruby/**/*.c setlocal noet
 
   augroup END
 
@@ -60,9 +62,9 @@ set path+=lib/**
 filetype on
 filetype plugin on
 
-set ts=2
-set sw=2
-set et
+set expandtab
+set shiftwidth=2
+set softtabstop=2
 set kp=ri
 
 fun GitGrep(...) 
@@ -111,6 +113,7 @@ set columns=80
 "highlight ExtraWhitespace ctermbg=darkgreen guibg=lightgreen
 "highlight ExtraTabs ctermbg=red guibg=red
 let ruby_space_errors = 1
+let c_space_errors = 1
 
 command! -nargs=? -range Align <line1>,<line2>call AlignSection('<args>')
 vnoremap <silent> <Leader>a :Align<CR>
@@ -153,3 +156,6 @@ endfunction
 " Changelog configuration
 let g:changelog_username='Aaron Patterson <tenderlove@ruby-lang.org>'
 let g:changelog_dateformat='%c'
+
+" git grep
+map <Leader>gg :Ggrep -e '<C-R>=expand("<cword>")<Enter>'<Enter>
