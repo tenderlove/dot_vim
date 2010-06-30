@@ -5,6 +5,9 @@ set history=50		" keep 50 lines of command line history
 set ruler		" show the cursor position all the time
 set showcmd		" display incomplete commands
 set incsearch		" do incremental searching
+
+set wildmode=longest:list
+
 map Q gq
 vnoremap p <Esc>:let current_reg = @"<CR>gvs<C-R>=current_reg<CR><Esc>
 
@@ -52,6 +55,8 @@ endif
 if has("gui_running")
   set guioptions-=m
   set guioptions-=T
+  set lines=40
+  set columns=80
 endif
 
 au BufNewFile,BufRead *.ltx                      set wm=4
@@ -104,8 +109,6 @@ set scrolloff=2
 set ruler
 set laststatus=2
 set statusline=%t%(\ [%n%M]%)%(\ %H%R%W%)\ %(%c-%v,\ %l\ of\ %L,\ (%o)\ %P\ 0x%B\ (%b)%)
-set lines=40
-set columns=80
 
 "match ExtraWhitespace /\s\+$/
 "match ExtraTabs /\t\+/
@@ -154,7 +157,7 @@ endfunction
 "call MoveToProjectRoot()
 
 " Changelog configuration
-let g:changelog_username='Aaron Patterson <tenderlove@ruby-lang.org>'
+let g:changelog_username='Aaron Patterson <aaron@tenderlovemaking.com>'
 let g:changelog_dateformat='%c'
 
 " git grep
