@@ -1,5 +1,5 @@
 let g:netrw_dirhistmax  =10
 let g:netrw_dirhist_cnt =3
-let g:netrw_dirhist_1='/Users/apatterson/git/rails/activerecord/test/cases'
-let g:netrw_dirhist_2='/Users/apatterson/git/rails/activerecord/test/cases/adapters'
-let g:netrw_dirhist_3='/Users/apatterson/git/rails/activerecord/test/cases/adapters/sqlite'
+let g:netrw_dirhist_1='/Users/apatterson/git/crazy/ext'
+let g:netrw_dirhist_2='/Users/apatterson/git/crazy/ext/crazy'
+let g:netrw_dirhist_3='/Users/apatterson/foo'
