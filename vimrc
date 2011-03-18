@@ -12,7 +12,7 @@ map Q gq
 vnoremap p <Esc>:let current_reg = @"<CR>gvs<C-R>=current_reg<CR><Esc>
 
 set suffixesadd=.rb
-set path+=lib/**
+set path+=lib/**,test/**
 
 if has("ruby") " assume system has ruby
   " Add stdlib of environment's ruby to path
