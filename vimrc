@@ -11,7 +11,8 @@ set wildmode=longest:list
 map Q gq
 vnoremap p <Esc>:let current_reg = @"<CR>gvs<C-R>=current_reg<CR><Esc>
 
-let g:ruby_path = &path . "lib/**"
+set path+=lib/**
+let g:ruby_path = &path
 
 " Only do this part when compiled with support for autocommands.
 if has("autocmd")
