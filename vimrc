@@ -11,7 +11,15 @@ set wildmode=longest:list
 map Q gq
 vnoremap p <Esc>:let current_reg = @"<CR>gvs<C-R>=current_reg<CR><Esc>
 
+set suffixesadd=.rb
 set path+=lib/**
+
+if has("ruby") " assume system has ruby
+  " Add stdlib of environment's ruby to path
+  let stdlib = system('ruby -rrbconfig -e"print RbConfig::CONFIG[\"rubylibdir\"]"')
+  let &l:path = &path . "," . stdlib
+endif
+
 let g:ruby_path = &path
 
 " Only do this part when compiled with support for autocommands.
