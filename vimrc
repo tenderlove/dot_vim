@@ -1,3 +1,6 @@
+call pathogen#runtime_append_all_bundles()
+call pathogen#helptags()
+
 set nocompatible
 set backspace=indent,eol,start
 set autoindent		" always set autoindenting on
@@ -172,3 +175,6 @@ let g:changelog_dateformat='%c'
 
 " git grep
 map <Leader>gg :Ggrep -e '<C-R>=expand("<cword>")<Enter>'<Enter>
+
+set exrc
+set secure
