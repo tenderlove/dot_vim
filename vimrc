@@ -9,7 +9,7 @@ set ruler		" show the cursor position all the time
 set showcmd		" display incomplete commands
 set incsearch		" do incremental searching
 
-set wildmode=longest:list
+set wildmode=list:full
 
 map Q gq
 vnoremap p <Esc>:let current_reg = @"<CR>gvs<C-R>=current_reg<CR><Esc>
@@ -115,6 +115,9 @@ augroup RubyTests
 augroup END
 
 map <Leader>rt :!ctags --extra=+f -R *<CR><CR>
+let g:ConqueTerm_CloseOnEnd = 0
+nmap <Leader>cb :ConqueTermSplit bash
+
 set scrolloff=2
 "set foldmethod=syntax
 "let ruby_no_comment_fold=1
