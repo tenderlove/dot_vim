@@ -76,6 +76,7 @@ endif
 au BufNewFile,BufRead *.ltx                      set wm=4
 
 set backupdir=/tmp
+set directory=/tmp
 
 filetype on
 filetype plugin on
