@@ -1,6 +1,9 @@
 call pathogen#runtime_append_all_bundles()
 call pathogen#helptags()
 
+let g:vim_markdown_folding_disabled=1
+let g:html_font = "Inconsolata"
+
 set nocompatible
 set backspace=indent,eol,start
 set autoindent		" always set autoindenting on
@@ -8,14 +11,21 @@ set history=50		" keep 50 lines of command line history
 set ruler		" show the cursor position all the time
 set showcmd		" display incomplete commands
 set incsearch		" do incremental searching
-
+set relativenumber
 set wildmode=list:full
+set suffixesadd=.rb     " find ruby files
+set path+=lib/**,test/** " look in lib and test
 
-map Q gq
-vnoremap p <Esc>:let current_reg = @"<CR>gvs<C-R>=current_reg<CR><Esc>
+set expandtab
+set shiftwidth=2
+set softtabstop=2
+set kp=ri
 
-set suffixesadd=.rb
-set path+=lib/**,test/**
+set exrc
+set secure
+set colorcolumn=81
+
+set backupdir=/tmp
 
 if has("ruby") " assume system has ruby
   " Add stdlib of environment's ruby to path
@@ -49,14 +59,11 @@ if has("autocmd")
     \   exe "normal g`\"" |
     \ endif
   autocmd BufRead *.rdoc setlocal filetype=text
+  autocmd BufRead *.md setlocal filetype=mkd
   autocmd BufRead *.markdown setlocal filetype=mkd
   autocmd BufRead ruby/**/*.c setlocal noet
 
   augroup END
-
-else
-
-  set autoindent		" always set autoindenting on
 
 endif " has("autocmd")
 " Switch syntax highlighting on, when the terminal has colors
@@ -70,67 +77,37 @@ if has("gui_running")
   set guioptions-=m
   set guioptions-=T
   set lines=40
-  set columns=80
+  set columns=84
 endif
 
 au BufNewFile,BufRead *.ltx                      set wm=4
 
-set backupdir=/tmp
-
 filetype on
 filetype plugin on
-
-set expandtab
-set shiftwidth=2
-set softtabstop=2
-set kp=ri
-
-fun GitGrep(...) 
-        let save = &grepprg 
-        set grepprg=git\ grep\ -n\ $* 
-        let s = 'grep' 
-        for i in a:000 
-                let s = s . ' ' . i 
-        endfor 
-        exe s 
-        let &grepprg = save 
-endfun 
-
-command -nargs=? G call GitGrep(<f-args>)
-
-func GitGrepWord()
-  normal! "zyiw
-  call GitGrep('-w -e ', getreg('z'))
-endf
-nmap <C-x>G :call GitGrepWord()<CR>
 
 " Run Ruby unit tests with gT (for all) or gt (only test under
 " cursor) in command mode
 augroup RubyTests
   au!
   autocmd BufRead,BufNewFile *_test.rb,test_*.rb
-    \ :nmap rt V:<C-U>!$HOME/.vim/bin/ruby_run_focused_unit_test 
+    \ :nmap rt V:<C-U>!$HOME/.vim/bin/ruby_run_focused_unit_test
     \ % <C-R>=line("'<")<CR>p <CR>|
     \ :nmap rT :<C-U>!rake TEST=%<CR>
 augroup END
 
-map <Leader>rt :!ctags --extra=+f -R *<CR><CR>
+map <Leader>rt :!ctags --tag-relative --extra=+f -Rf.git/tags --exclude=.git,pkg --languages=-javascript,sql<CR><CR>
+set tags+=.git/tags
+
 let g:ConqueTerm_CloseOnEnd = 0
 nmap <Leader>cb :ConqueTermSplit bash
 
 set scrolloff=2
-"set foldmethod=syntax
 "let ruby_no_comment_fold=1
 "let c_no_comment_fold=1
 set ruler
 set laststatus=2
-set statusline=%t%(\ [%n%M]%)%(\ %H%R%W%)\ %(%c-%v,\ %l\ of\ %L,\ (%o)\ %P\ 0x%B\ (%b)%)
+"set statusline=%t%(\ [%n%M]%)%(\ %H%R%W%)\ %(%c-%v,\ %l\ of\ %L,\ (%o)\ %P\ 0x%B\ (%b)%)
 
-"match ExtraWhitespace /\s\+$/
-"match ExtraTabs /\t\+/
-"
-"highlight ExtraWhitespace ctermbg=darkgreen guibg=lightgreen
-"highlight ExtraTabs ctermbg=red guibg=red
 let ruby_space_errors = 1
 let c_space_errors = 1
 
@@ -164,7 +141,7 @@ setlocal spell spelllang=en_us
 compiler rubyunit
 
 function! MoveToProjectRoot()
-  let l:dirs = [finddir('.git', ",;")] 
+  let l:dirs = [finddir('.git', ",;")]
   if dirs != ['.git'] && dirs != ['']
     call map(dirs, '"/" . join(remove(split(v:val, "/"), 0, -2), "/")')
     execute 'cd ' . dirs[0]
@@ -175,9 +152,7 @@ endfunction
 " Changelog configuration
 let g:changelog_username='Aaron Patterson <aaron@tenderlovemaking.com>'
 let g:changelog_dateformat='%c'
+let g:airline_theme='light'
 
 " git grep
 map <Leader>gg :Ggrep -e '<C-R>=expand("<cword>")<Enter>'<Enter>
-
-set exrc
-set secure
