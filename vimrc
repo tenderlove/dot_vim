@@ -1,5 +1,3 @@
-  set lines=40
-  set columns=84
 call pathogen#runtime_append_all_bundles()
 call pathogen#helptags()
 
@@ -72,6 +70,8 @@ endif " has("autocmd")
 " Also switch on highlighting the last used search pattern.
 if &t_Co > 2 || has("gui_running")
   syntax on
+  set lines=80
+  set columns=84
   set hlsearch
 endif
 
