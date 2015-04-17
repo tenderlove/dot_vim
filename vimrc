@@ -1,3 +1,5 @@
+  set lines=40
+  set columns=84
 call pathogen#runtime_append_all_bundles()
 call pathogen#helptags()
 
@@ -76,8 +78,6 @@ endif
 if has("gui_running")
   set guioptions-=m
   set guioptions-=T
-  set lines=40
-  set columns=84
 endif
 
 au BufNewFile,BufRead *.ltx                      set wm=4
