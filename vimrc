@@ -5,12 +5,14 @@ set nocompatible
 
 function! SetRailsEnv()
   let l:path = getcwd()
+  let g:ruby_indent_access_modifier_style="normal"
   if match(l:path, "rails\$") > 0
     if filewritable(l:path . "/activesupport") == 2
       if match(&path, "activesupport") < 0
         let &path = "activesupport/lib,actionpack/lib,activerecord/lib," . &path
       endif
       compiler minitest
+      let g:ruby_indent_access_modifier_style="indent"
     endif
   endif
 endfunction
