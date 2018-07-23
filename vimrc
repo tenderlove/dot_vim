@@ -126,10 +126,13 @@ set wildmode=list:full
 set suffixesadd=.rb     " find ruby files
 set path+=lib/**,test/** " look in lib and test
 
+" Expand tabs, but set shiftwidth and softtabstop to 2.  This allows vim
+" to mix tabs and spaces in Ruby C code, but it looks correct
 set expandtab
 set shiftwidth=2
 set softtabstop=2
-set kp=ri
+
+set kp=ri " Use ri for help
 
 set exrc
 set secure
