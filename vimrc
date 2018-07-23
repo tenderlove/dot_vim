@@ -101,12 +101,6 @@ augroup filetype_vim
   autocmd FileType vim setlocal foldmethod=marker
 augroup END
 
-augroup move_to_root
-  autocmd!
-  autocmd BufEnter,VimEnter * :call MoveToProjectRoot(expand("%"))
-augroup END
-
-
 if has("gui_running")
   set lines=50
   set columns=90
