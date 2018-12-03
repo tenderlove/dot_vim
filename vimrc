@@ -35,9 +35,14 @@ function! MoveToProjectRoot(opened_file)
   let l:git_dir = finddir(".git", l:file_path . ";")
   if strlen(l:git_dir) > 0
     let l:project_dir = fnamemodify(strpart(l:git_dir, 0, stridx(l:git_dir, "/.git")), ":p")
-    execute 'lcd ' . l:project_dir
+    if isdirectory(l:project_dir)
+      execute 'lcd ' . l:project_dir
+      return l:project_dir
+    else
+      return "" " Didn't move
+    endif
   else
-    return "didnotmove"
+    return "" " Didn't move
   endif
 endfunction
 
@@ -93,6 +98,7 @@ augroup filetype_ruby
   autocmd FileType ruby nnoremap <buffer> <localleader>c I#<esc>
   autocmd BufRead *_test.rb :call SetRailsMake()
   autocmd BufRead,VimEnter * :call SetRailsEnv()
+  " autocmd BufRead * :call MoveToProjectRoot(expand("%"))
   autocmd FileType ruby compiler rubyunit
 augroup END
 
@@ -118,7 +124,7 @@ set incsearch		" do incremental searching
 set relativenumber
 set wildmode=list:full
 set suffixesadd=.rb     " find ruby files
-set path+=lib/**,test/** " look in lib and test
+set path+=lib/**,test/**,app/** " look in lib and test
 
 " Expand tabs, but set shiftwidth and softtabstop to 2.  This allows vim
 " to mix tabs and spaces in Ruby C code, but it looks correct
@@ -160,7 +166,7 @@ let g:ruby_path = &path
 let g:vim_markdown_folding_disabled=1
 let g:html_font = "Inconsolata"
 
-map <Leader>rt :!ctags --tag-relative=yes --extras=+f -Rf.git/tags --exclude=.git --exclude=pkg --exclude=.ext --languages=-javascript,sql<cr><cr>
+map <Leader>rt :!git ls-files \| ctags -L - --tag-relative=yes --extras=+f -Rf.git/tags --languages=-javascript,sql<cr><cr>
 
 let ruby_space_errors = 1
 let c_space_errors = 1
