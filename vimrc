@@ -13,7 +13,6 @@ function! SetRailsEnv()
           let &path = component . "/lib/**," . &path
         endfor
       endif
-      compiler minitest
       let g:ruby_indent_access_modifier_style="indent"
     endif
   endif
