@@ -40,3 +40,6 @@
 [submodule "bundle/vim-unimpaired"]
 	path = bundle/vim-unimpaired
 	url = git://github.com/tpope/vim-unimpaired.git
+[submodule "vim-rhubarb"]
+	path = vim-rhubarb
+	url = git@github.com:tpope/vim-rhubarb.git
