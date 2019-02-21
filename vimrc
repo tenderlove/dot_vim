@@ -9,7 +9,9 @@ function! SetRailsEnv()
   if match(l:path, "rails\$") > 0
     if filewritable(l:path . "/activesupport") == 2
       if match(&path, "activesupport") < 0
-        let &path = "activesupport/lib,actionpack/lib,activerecord/lib," . &path
+        for component in ["activesupport", "actionpack", "actionview", "activerecord"]
+          let &path = component . "/lib/**," . &path
+        endfor
       endif
       compiler minitest
       let g:ruby_indent_access_modifier_style="indent"
@@ -89,7 +91,7 @@ augroup vimrcEx
   autocmd BufRead *.rdoc setlocal filetype=text
   autocmd BufRead *.md setlocal filetype=markdown
   autocmd BufRead *.markdown setlocal filetype=markdown
-  autocmd BufRead *.c setlocal noet sws=4 sw=4
+  autocmd BufRead *.c setlocal noet sw=4
   autocmd Filetype gitcommit setlocal spell textwidth=72
 augroup END
 
@@ -108,8 +110,6 @@ augroup filetype_vim
 augroup END
 
 if has("gui_running")
-  set lines=50
-  set columns=90
   set guioptions-=m
   set guioptions-=T
   set guifont=Inconsolata:h14
