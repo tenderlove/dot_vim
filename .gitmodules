@@ -43,3 +43,6 @@
 [submodule "vim-rhubarb"]
 	path = vim-rhubarb
 	url = git@github.com:tpope/vim-rhubarb.git
+[submodule "bundle/vim-rails"]
+	path = bundle/vim-rails
+	url = git@github.com:tpope/vim-rails.git
