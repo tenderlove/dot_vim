@@ -36,13 +36,13 @@
 	url = git://github.com/tpope/vim-surround.git
 [submodule "bundle/vim-test"]
 	path = bundle/vim-test
-	url = git://github.com:janko-m/vim-test.git
+	url = git://github.com/janko-m/vim-test.git
 [submodule "bundle/vim-unimpaired"]
 	path = bundle/vim-unimpaired
 	url = git://github.com/tpope/vim-unimpaired.git
 [submodule "vim-rhubarb"]
 	path = vim-rhubarb
-	url = git://github.com:tpope/vim-rhubarb.git
+	url = git://github.com/tpope/vim-rhubarb.git
 [submodule "bundle/vim-rails"]
 	path = bundle/vim-rails
-	url = git://github.com:tpope/vim-rails.git
+	url = git://github.com/tpope/vim-rails.git
