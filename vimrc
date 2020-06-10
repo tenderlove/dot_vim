@@ -90,7 +90,7 @@ augroup vimrcEx
   autocmd BufRead *.rdoc setlocal filetype=text
   autocmd BufRead *.md setlocal filetype=markdown
   autocmd BufRead *.markdown setlocal filetype=markdown
-  autocmd BufRead *.c setlocal noet sw=4
+  autocmd BufRead *.c setlocal sw=4
   autocmd Filetype gitcommit setlocal spell textwidth=72
 augroup END
 
@@ -108,10 +108,21 @@ augroup filetype_vim
   autocmd FileType vim setlocal foldmethod=marker
 augroup END
 
+function! OpenPR(sha)
+  let pr_number = system("git log --merges --ancestry-path --oneline ". a:sha . "..master | grep 'pull request' | tail -n1 | awk '{print $5}' | cut -c2-")
+  let remote = fugitive#RemoteUrl(".")
+  let root = rhubarb#homepage_for_url(remote)
+  let url = root . '/pull/' . substitute(pr_number, '\v\C\n', '', 1)
+  call netrw#BrowseX(url, 0)
+endfunction
+
 augroup fugitive_ext
   autocmd!
   " Browse to the commit under my cursor
   autocmd FileType fugitiveblame nnoremap <buffer> <localleader>gb :execute ":Gbrowse " . expand("<cword>")<cr>
+
+  " Browse to the PR for commit under my cursor
+  autocmd FileType fugitiveblame nnoremap <buffer> <localleader>pr :call OpenPR(expand("<cword>"))<cr>
 augroup END
 
 if has("gui_running")
@@ -171,7 +182,7 @@ let g:ruby_path = &path
 let g:vim_markdown_folding_disabled=1
 let g:html_font = "Inconsolata"
 
-map <Leader>rt :!git ls-files \| ctags -L - --tag-relative=yes --extras=+f -Rf.git/tags --languages=-javascript,sql<cr><cr>
+map <Leader>rt :!ctags --tag-relative=yes --extras=+f -Rf.git/tags --languages=-javascript,sql .<cr><cr>
 
 let ruby_space_errors = 1
 let c_space_errors = 1
