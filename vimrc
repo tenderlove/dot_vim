@@ -2,6 +2,29 @@ call pathogen#infect()
 
 set nocompatible
 
+function! SaveSession()
+  let l:gitdir = finddir(".git")
+  if l:gitdir == ""
+    return
+  endif
+
+  let l:session = l:gitdir . "/session.vim"
+  execute 'mksession! ' . l:session
+endfunction
+
+function! RestoreSession()
+  if filereadable(getcwd() . "/.git/session.vim")
+    execute 'so ' . getcwd() . "/.git/session.vim"
+    if bufexists(1)
+      for bufnum in range(1, bufnr('$'))
+        if bufwinnr(bufnum) == -1
+          exec 'sbuffer ' . bufnum
+        endif
+      endfor
+    endif
+  endif
+endfunction
+
 function! SetRailsEnv()
   let l:path = getcwd()
   let g:ruby_indent_access_modifier_style="normal"
@@ -70,6 +93,109 @@ function! AlignLine(line, sep, maxpos, extra)
   return m[1] . spaces . m[2]
 endfunction
 
+function! MakeIVSet(name, max_width)
+  let l:padding = repeat(" ", (a:max_width - strlen(a:name)) + 1)
+  return "@" . a:name . padding . "= " . a:name
+endfunction
+
+function! MakeIVS(text)
+  let l:iv_names = map(split(a:text, ","), { _, item -> trim(item) })
+  let l:max_width = max(map(deepcopy(l:iv_names), { _, item -> strlen(item) }))
+  let l:lines = map(l:iv_names, { _, item -> MakeIVSet(item, l:max_width) })
+
+  call append(line("."), l:lines)
+  let l:cmd = "normal! j=" . (len(l:iv_names) - 1) . "j"
+  execute l:cmd
+endfunction
+
+function! MakeIVSVisual(type)
+  let l:at = @@
+  let l:cursor = getpos(".")
+  execute "normal! `<v`>y"
+  call MakeIVS(@@)
+  call setpos(".", l:cursor)
+  let @@ = l:at
+endfunc
+
+function! MakeIVSLine(line)
+  let l:match = matchlist(a:line, 'def initialize[ (]\([^)]*\))\?$')
+  if len(l:match) > 0
+    call MakeIVS(get(l:match, 1))
+  else
+    echo "nope"
+  endif
+endfunc
+
+function! GetLLVMTest(mnemonic)
+  let l:cmd = "grep -i '\\b" . a:mnemonic . "\\b' /Users/aaron/git/llvm/test/MC/AArch64/*.s | grep CHECK | ruby ~/git/aarch64/convert.rb"
+  let l:lines = split(system(cmd), '\v\n')
+  if len(l:lines) == 0
+    echo "No tests"
+  else
+    call append(line("."), l:lines)
+  end
+endfunc
+
+function! GetLLVMTestVisual(type)
+  let l:at = @@
+  let l:cursor = getpos(".")
+  execute "normal! `<v`>y"
+  call GetLLVMTest(@@)
+  call setpos(".", l:cursor)
+  let @@ = l:at
+endfunc
+
+function! MakeASMTest(line)
+  let l:match = matchlist(a:line, '# \([A-Z0-9]\+\)')
+  if len(l:match) > 0
+    call GetLLVMTest(get(l:match, 1))
+  else
+    let l:match = matchlist(a:line, '# \([a-z]\+.*$\)')
+
+    if len(l:match) > 0
+      let l:cmd = "ruby /Users/aaron/git/aarch64/extract_bytes.rb"
+      let l:lines = split(system(cmd, get(l:match, 1)), '\v\n')
+      call append(line("."), l:lines)
+      let l:cmd = "normal! =" . len(l:lines) . "j"
+      echo l:cmd
+      execute l:cmd
+    end
+  endif
+endfunc
+
+function! MakeIVCall(item)
+  if a:item[0] ==# "r"
+    return "@" . a:item . ".to_i"
+  else
+    return "@" . a:item
+  endif
+endfunction
+
+function! MakeDelegateCall(funcname, text)
+  let l:iv_names = map(split(a:text, ","), { _, item -> trim(item) })
+  let l:lines = map(l:iv_names, { _, item -> MakeIVCall(item) })
+
+  let l:delegate = "self." . a:funcname . "(" . join(l:lines, ", ") . ")"
+
+  let @@ = l:delegate . "\n"
+  echo l:delegate
+endfunction
+
+function! MakeDelegate(line)
+  let l:match = matchlist(a:line, 'def \(\w\+\)[ (]\(.*\))\?$')
+  if len(l:match) > 0
+    call MakeDelegateCall(get(l:match, 1), get(l:match, 2))
+  endif
+endfunc
+
+augroup aaronTest
+  au!
+
+  nnoremap <silent> <leader>mr :<c-u>call MakeIVSLine(getline("."))<cr>
+  nnoremap <silent> <leader>mt :<c-u>call MakeASMTest(getline("."))<cr>
+  nnoremap <silent> <leader>md :<c-u>call MakeDelegate(getline("."))<cr>
+augroup END
+
 filetype plugin indent on
 
 " Put these in an autocmd group, so that we can delete them easily.
@@ -90,7 +216,10 @@ augroup vimrcEx
   autocmd BufRead *.md setlocal filetype=markdown
   autocmd BufRead *.markdown setlocal filetype=markdown
   autocmd BufRead *.c setlocal sw=4
+  autocmd BufRead *.cpp setlocal sw=4
   autocmd Filetype gitcommit setlocal spell textwidth=72
+
+  autocmd VimLeave * call SaveSession()
 augroup END
 
 augroup filetype_ruby
@@ -99,7 +228,7 @@ augroup filetype_ruby
   autocmd BufRead *_test.rb :call SetRailsMake()
   autocmd BufRead,VimEnter * :call SetRailsEnv()
   " autocmd BufRead * :call MoveToProjectRoot(expand("%"))
-  autocmd FileType ruby compiler rubyunit
+  autocmd FileType ruby compiler minitest
 augroup END
 
 augroup filetype_vim
@@ -127,6 +256,7 @@ augroup END
 if has("gui_running")
   set guioptions-=m
   set guioptions-=T
+  " set guifont=Cascadia\ Mono\ Light:h12
   set guifont=Inconsolata:h14
 endif
 
@@ -161,6 +291,15 @@ set ruler
 set laststatus=2
 set spell spelllang=en_us
 
+" ===== Instead of backing up files, just reload the buffer when it changes. =====
+" The buffer is an in-memory representation of a file, it's what you edit
+set autoread                         " Auto-reload buffers when file changed on disk
+set nobackup                         " Don't use backup files
+set nowritebackup                    " Don't backup the file while editing
+set noswapfile                       " Don't create swapfiles for new buffers
+set updatecount=0                    " Don't try to write swapfiles after some number of updates
+set backupskip=/tmp/*,/private/tmp/* " Let me edit crontab files
+
 " Switch syntax highlighting on, when the terminal has colors
 " Also switch on highlighting the last used search pattern.
 if &t_Co > 2 || has("gui_running")
@@ -179,9 +318,18 @@ let &path .= "," . stdlib
 let g:ruby_path = &path
 
 let g:vim_markdown_folding_disabled=1
-let g:html_font = "Inconsolata"
+let g:html_font = ["Inconsolata", "Consolas"]
 
-map <Leader>rt :!ctags --tag-relative=yes --extras=+f -Rf.git/tags --languages=-javascript,sql .<cr><cr>
+function! DoneTagging(channel)
+  echo "Done tagging"
+endfunction
+
+function! Taggit()
+  let job = job_start("ctags --tag-relative=yes --extras=+f -Rf.git/tags --languages=-javascript,sql,TypeScript --exclude=.ext --exclude=include/ruby-* --exclude=rb_mjit_header.h .", { 'close_cb': 'DoneTagging'})
+endfunction
+
+map <Leader>rt :!ctags --tag-relative=yes --extras=+f -Rf.git/tags --languages=-javascript,sql,TypeScript --exclude=.ext --exclude=include/ruby-\* --exclude=rb_mjit_header.h .<cr><cr>
+map <Leader>ww :set lines=58 columns=115<cr>
 
 let ruby_space_errors = 1
 let c_space_errors = 1
@@ -195,6 +343,10 @@ let g:changelog_dateformat='%c'
 let g:airline_theme='light'
 let g:airline#extensions#whitespace#enabled = 0
 
+" netrw. Tree style / relative numbering
+let g:netrw_bufsettings="noma nomod nonu nobl nowrap ro rnu"
+
+nnoremap <leader>th :let @@=printf("0x%x", str2nr(expand("<cword>")))<cr>viwp
 nnoremap <leader>ev :split $MYVIMRC<cr>
 nnoremap <leader>sv :source $MYVIMRC<cr>
 " Git grep visually selected text
@@ -203,9 +355,6 @@ vnoremap <leader>lm <esc>bimethod(:<esc>ea).source_location<esc>Ip <esc>
 
 " puts the caller
 nnoremap <leader>wtf oputs "#" * 90<c-m>puts caller<c-m>puts "#" * 90<esc>
-
-" Load object space and enable tracing
-nnoremap <leader>to orequire "objspace"<c-m>ObjectSpace.trace_object_allocations_start<c-m><esc>
 
 nnoremap <leader>dts :put =strftime('%b %d, %Y')<cr>
 nnoremap <leader>ne gg:put! =strftime('%b %d, %Y')<cr>i# <esc>o
