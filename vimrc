@@ -218,6 +218,7 @@ augroup vimrcEx
   autocmd BufRead *.c setlocal sw=4
   autocmd BufRead *.cpp setlocal sw=4
   autocmd Filetype gitcommit setlocal spell textwidth=72
+  autocmd BufRead */ruby/*.c   setlocal cinoptions=:2,=2,l1
 
   autocmd VimLeave * call SaveSession()
 augroup END
@@ -235,6 +236,13 @@ augroup filetype_vim
   autocmd!
   autocmd FileType vim setlocal foldmethod=marker
 augroup END
+
+" augroup cool
+"   autocmd!
+"   autocmd InsertEnter * :silent call job_start(["/Users/aaron/git/initial-v/firmware/ctrl.rb", "drive"])
+"   autocmd InsertLeave * :silent call job_start(["/Users/aaron/git/initial-v/firmware/ctrl.rb", "neutral"])
+"   autocmd BufWritePost * :silent call job_start(["/Users/aaron/git/initial-v/firmware/ctrl.rb", "park"])
+" augroup END
 
 function! OpenPR(sha)
   let pr_number = system("git log --merges --ancestry-path --oneline ". a:sha . "..master | grep 'pull request' | tail -n1 | awk '{print $5}' | cut -c2-")
@@ -360,3 +368,61 @@ nnoremap <leader>dts :put =strftime('%b %d, %Y')<cr>
 nnoremap <leader>ne gg:put! =strftime('%b %d, %Y')<cr>i# <esc>o
 
 let g:fugitive_git_command = 'git'
+
+" Tell Vim to find vim-lsp
+packadd vim-lsp
+
+" Use clangd if available
+" if executable('clangd')
+"   au User lsp_setup call lsp#register_server({
+"         \ 'name': 'clangd',
+"         \ 'cmd': {server_info->['clangd']},
+"         \ 'allowlist': ['c'],
+"         \ })
+" endif
+
+" Log stuff while doing development
+" let g:lsp_log_verbose = 1
+" let g:lsp_log_file = expand('~/git/lsp-stream/vim-lsp.log')
+
+" Only start the LS if there's a special file
+if filereadable(".omgtest")
+  au User lsp_setup call lsp#register_server({
+      \ 'name': 'neat-lsp',
+      \ 'cmd': { server_info->['/Users/aaron/git/lsp-stream/ls.rb'] },
+      \ 'allowlist': ['ruby'],
+      \ })
+endif
+
+if executable('rust-analyzer')
+    au User lsp_setup call lsp#register_server({
+        \ 'name': 'rust-analyzer',
+        \ 'cmd': {server_info->['rust-analyzer']},
+        \ 'allowlist': ['rs', 'rust'],
+        \ })
+endif
+
+if filereadable(".livecode")
+  au User lsp_setup
+        \ call lsp#register_server({
+        \      'name': 'cool-lsp',
+        \      'cmd': ["nc", "localhost", "2000"],
+        \      'allowlist': ['ruby', 'eruby'],
+        \ })
+endif
+
+function! s:on_lsp_buffer_enabled() abort
+    setlocal omnifunc=lsp#complete
+    setlocal signcolumn=yes
+    setlocal tagfunc=lsp#tagfunc
+    nmap <buffer> <leader>cc :LspCallHierarchyIncoming<cr>
+    nmap <buffer> [g <plug>(lsp-previous-diagnostic)
+    nmap <buffer> ]g <plug>(lsp-next-diagnostic)
+    nmap <buffer> K <plug>(lsp-hover)
+endfunction
+
+augroup lsp_install
+    au!
+    " call s:on_lsp_buffer_enabled only for languages that has the server registered.
+    autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+augroup END
