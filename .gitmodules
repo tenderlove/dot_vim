@@ -13,9 +13,6 @@
 [submodule "bundle/vim-copy-as-rtf"]
 	path = bundle/vim-copy-as-rtf
 	url = git@github.com:tenderlove/vim-copy-as-rtf.git
-[submodule "bundle/vim-dispatch"]
-	path = bundle/vim-dispatch
-	url = git://github.com/tpope/vim-dispatch.git
 [submodule "bundle/vim-elixir"]
 	path = bundle/vim-elixir
 	url = https://github.com/elixir-lang/vim-elixir.git
