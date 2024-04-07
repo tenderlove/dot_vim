@@ -297,10 +297,19 @@ endif
 
 if filereadable(".livecode")
   au User lsp_setup
-        \ call lsp#register_server({
+        \ lsp#register_server({
         \      'name': 'cool-lsp',
         \      'cmd': ["nc", "localhost", "2000"],
         \      'allowlist': ['ruby', 'eruby'],
+        \ })
+endif
+
+if filereadable(".ls-dev")
+  au User lsp_setup
+        \ lsp#register_server({
+        \      'name': 'LSP Test',
+        \      'cmd': ["/Users/aaron/git/lsp-stream/syntax-check.rb"],
+        \      'allowlist': ['ruby'],
         \ })
 endif
 
@@ -308,11 +317,24 @@ def On_lsp_buffer_enabled()
     setlocal omnifunc=lsp#complete
     setlocal signcolumn=yes
     setlocal tagfunc=lsp#tagfunc
+    setlocal bexpr=LSPBalloon()
+    setlocal ballooneval balloonevalterm
     nmap <buffer> <leader>cc :LspCallHierarchyIncoming<cr>
     nmap <buffer> [g <plug>(lsp-previous-diagnostic)
     nmap <buffer> ]g <plug>(lsp-next-diagnostic)
     nmap <buffer> K <plug>(lsp-hover)
 enddef
+
+def g:CleverTab(): string
+  if strpart( getline('.'), 0, col('.') - 1 ) =~ '^\s*$'
+    return "\<Tab>"
+  else
+    return "\<C-N>"
+  endif
+enddef
+
+inoremap <Tab> <C-R>=CleverTab()<CR>
+set completeopt=longest,menuone
 
 augroup lsp_install
     au!
