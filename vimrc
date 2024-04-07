@@ -27,6 +27,39 @@ def RestoreSession()
   endif
 enddef
 
+def MakeIVSet(name: string, max_width: number): string
+  var padding = repeat(" ", (max_width - strlen(name)) + 1)
+  return "@" .. name .. padding .. "= " .. name
+enddef
+
+def MakeIVS(text: string): void
+  var iv_names = map(split(text, ","), (_, item) => trim(item) )
+  var max_width = max(map(deepcopy(iv_names), (_, item) => strlen(item) ))
+  var lines = map(iv_names, (_, item) => MakeIVSet(item, max_width) )
+
+  call append(line("."), lines)
+  var cmd = "normal! j=" .. (len(iv_names) - 1) .. "j"
+  execute cmd
+enddef
+
+def MakeIVSVisual(): void
+  var at = @@
+  var cursor = getpos(".")
+  execute "normal! `<v`>y"
+  call MakeIVS(@@)
+  call setpos(".", cursor)
+  let @@ = at
+enddef
+
+def MakeIVSLine(line: string): void
+  var match = matchlist(line, 'def initialize[ (]\([^)]*\))\?$')
+  if len(match) > 0
+    call MakeIVS(get(match, 1))
+  else
+    echo "nope"
+  endif
+enddef
+
 func AlignSection(regex) range
   let extra = 1
   let sep = empty(a:regex) ? '=' : a:regex
@@ -70,9 +103,11 @@ augroup vimrcEx
   autocmd BufRead *.rdoc setlocal filetype=text
   autocmd BufRead *.md setlocal filetype=markdown
   autocmd BufRead *.markdown setlocal filetype=markdown
-  autocmd BufRead *.c setlocal sw=4
   autocmd BufRead *.cpp setlocal sw=4
+  autocmd BufRead *.cc setlocal sw=4
+  autocmd BufRead *.rb setlocal sw=2 softtabstop=2 kp=ri suffixesadd=.rb
   autocmd Filetype gitcommit setlocal spell textwidth=72
+  autocmd Filetype c setlocal sw=4
   autocmd BufRead */ruby/*.c   setlocal cinoptions=:2,=2,l1
 
   autocmd VimLeave * call SaveSession()
@@ -87,15 +122,12 @@ augroup END
 
 augroup filetype_vim
   autocmd!
+    function LSPBalloon()
+        call lsp#internal#document_hover#under_cursor#do({ 'ui': 'balloon' })
+        return ''
+    endfunction
   autocmd FileType vim setlocal foldmethod=marker
 augroup END
-
-# augroup cool
-#   autocmd!
-#   autocmd InsertEnter * :silent call job_start(["/Users/aaron/git/initial-v/firmware/ctrl.rb", "drive"])
-#   autocmd InsertLeave * :silent call job_start(["/Users/aaron/git/initial-v/firmware/ctrl.rb", "neutral"])
-#   autocmd BufWritePost * :silent call job_start(["/Users/aaron/git/initial-v/firmware/ctrl.rb", "park"])
-# augroup END
 
 augroup fugitive_ext
   autocmd!
@@ -110,7 +142,9 @@ if has("gui_running")
   set guioptions-=m
   set guioptions-=T
   # set guifont=Cascadia\ Mono\ Light:h12
-  set guifont=Inconsolata:h14
+  # set guifont=Inconsolata:h14
+  # set guifont=MonaspaceNeon-Light:h12
+  set guifont=-monospace-:h12
 endif
 
 set backspace=indent,eol,start
@@ -121,16 +155,11 @@ set showcmd		# display incomplete commands
 set incsearch		# do incremental searching
 set relativenumber
 set wildmode=list:full
-set suffixesadd=.rb     # find ruby files
 set path+=lib/**,test/**,app/** # look in lib and test
 
 # Expand tabs, but set shiftwidth and softtabstop to 2.  This allows vim
 # to mix tabs and spaces in Ruby C code, but it looks correct
 set expandtab
-set shiftwidth=2
-set softtabstop=2
-
-set kp=ri # Use ri for help
 
 set exrc
 set secure
@@ -153,16 +182,12 @@ set noswapfile                       # Don't create swapfiles for new buffers
 set updatecount=0                    # Don't try to write swapfiles after some number of updates
 set backupskip=/tmp/*,/private/tmp/* # Let me edit crontab files
 
-# Switch syntax highlighting on, when the terminal has colors
-# Also switch on highlighting the last used search pattern.
-if has("gui_running")
-  syntax on
-  set hlsearch
-endif
+syntax on
+set hlsearch
 
 if has("terminal")
-  map <Leader>tt :terminal ++close<cr>
-  tnoremap <Esc> <C-W>N
+  nnoremap <Leader>tt :bo terminal ++close ++norestore ++rows=20<cr>
+  tnoremap <Esc> <C-W>p
 endif
 
 # Add stdlib of environment's ruby to path
@@ -170,8 +195,9 @@ g:stdlib = system('ruby --disable-gems -rrbconfig -e"print RbConfig::CONFIG[\"ru
 &path = &path .. "," .. g:stdlib
 g:ruby_path = &path
 
+#g:lsp_diagnostics_virtual_text_enabled = 0
 g:vim_markdown_folding_disabled = 1
-g:html_font = ["Inconsolata", "Consolas"]
+g:rtf_font = "Inconsolata"
 
 map <Leader>rt :!ctags --tag-relative=yes --extras=+f -Rf.git/tags --languages=-javascript,sql,TypeScript --exclude=.ext --exclude=include/ruby-\* --exclude=rb_mjit_header.h .<cr><cr>
 map <Leader>ww :set lines=58 columns=115<cr>
@@ -191,9 +217,15 @@ g:airline#extensions#whitespace#enabled = 0
 # netrw. Tree style / relative numbering
 g:netrw_bufsettings = "noma nomod nonu nobl nowrap ro rnu"
 
+# Convert number below cursor to hex
 nnoremap <leader>th :let @@=printf("0x%x", str2nr(expand("<cword>")))<cr>viwp
+
+# Edit vimrc
 nnoremap <leader>ev :split $MYVIMRC<cr>
+
+# load vimrc
 nnoremap <leader>sv :source $MYVIMRC<cr>
+
 # Git grep visually selected text
 vnoremap <leader>gg y:Ggrep <c-r>"<cr>
 vnoremap <leader>lm <esc>bimethod(:<esc>ea).source_location<esc>Ip <esc>
@@ -206,21 +238,52 @@ nnoremap <leader>ne gg:put! =strftime('%b %d, %Y')<cr>i# <esc>o
 
 g:fugitive_git_command = 'git'
 
+# First install vim-lsp:
+#
+#   $ git clone git@github.com:prabirshrestha/vim-lsp.git $HOME/.vim/pack/github/opt/vim-lsp
+#
 # Tell Vim to find vim-lsp
 packadd vim-lsp
+
+# Make ruby.vim indent the way standard wants them
+g:ruby_indent_assignment_style = 'variable'
+g:ruby_indent_hanging_elements = 0
+
+# Log stuff while doing development
+g:lsp_log_verbose = 1
+g:lsp_log_file = expand('/tmp/vim-lsp.log')
+
+if executable('./ls.rb')
+  au User lsp_setup call lsp#register_server({
+        \ 'name': 'ls.rb',
+        \ 'cmd': ['./ls.rb'],
+        \ 'allowlist': ['ruby'],
+        \ })
+endif
+
+# Use standard if available
+# if executable('standardrb')
+#   au User lsp_setup call lsp#register_server({
+#         \ 'name': 'standardrb',
+#         \ 'cmd': ['standardrb', '--lsp'],
+#         \ 'allowlist': ['ruby'],
+#         \ })
+# endif
 
 # Use clangd if available
 # if executable('clangd')
 #   au User lsp_setup call lsp#register_server({
 #         \ 'name': 'clangd',
-#         \ 'cmd': {server_info->['clangd']},
+#         \ 'cmd': ['clangd'],
 #         \ 'allowlist': ['c'],
 #         \ })
 # endif
-
-# Log stuff while doing development
-g:lsp_log_verbose = 1
-g:lsp_log_file = expand('~/git/lsp-stream/vim-lsp.log')
+#
+# au User lsp_setup call lsp#register_server({
+#       \ 'name': 'xcrun sourcekit-lsp',
+#       \ 'cmd': ['xcrun sourcekit-lsp'],
+#       \ 'allowlist': ['c'],
+#       \ })
 
 # Only start the LS if there's a special file
 
