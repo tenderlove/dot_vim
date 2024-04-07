@@ -100,12 +100,8 @@ augroup vimrcEx
         \ if line("'\"") > 0 && line("'\"") <= line("$") |
         \   exe "normal g`\"" |
         \ endif
-  autocmd BufRead *.rdoc setlocal filetype=text
-  autocmd BufRead *.md setlocal filetype=markdown
-  autocmd BufRead *.markdown setlocal filetype=markdown
-  autocmd BufRead *.cpp setlocal sw=4
-  autocmd BufRead *.cc setlocal sw=4
-  autocmd BufRead *.rb setlocal sw=2 softtabstop=2 kp=ri suffixesadd=.rb
+  autocmd Filetype cpp setlocal sw=4
+  autocmd Filetype ruby setlocal sw=2 softtabstop=2 kp=ri suffixesadd=.rb
   autocmd Filetype gitcommit setlocal spell textwidth=72
   autocmd Filetype c setlocal sw=4
   autocmd BufRead */ruby/*.c   setlocal cinoptions=:2,=2,l1
