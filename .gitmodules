@@ -43,3 +43,6 @@
 [submodule "bundle/vim-rails"]
 	path = bundle/vim-rails
 	url = git://github.com/tpope/vim-rails.git
+[submodule "pack/pack/github/opt/vim-lsp"]
+	path = pack/pack/github/opt/vim-lsp
+	url = https://github.com/prabirshrestha/vim-lsp.git
