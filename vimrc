@@ -101,6 +101,7 @@ augroup vimrcEx
         \   exe "normal g`\"" |
         \ endif
   autocmd Filetype cpp setlocal sw=4
+  autocmd Filetype vim setlocal sw=2
   autocmd Filetype ruby setlocal sw=2 softtabstop=2 kp=ri suffixesadd=.rb
   autocmd Filetype gitcommit setlocal spell textwidth=72
   autocmd Filetype c setlocal sw=4
